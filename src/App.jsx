@@ -71,4 +71,21 @@ function App(){
       setError('Erro ao editar tarefa');
     }
   };
+
+  return (
+    <div style={{ maxWidth: 700, margin: '40px auto', fontFamily: 'Arial' }}>
+      <h1>Lista de Tarefas</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      <form onSubmit={handleAdd} style={{ marginBottom: 16 }}>
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Nova tarefa"
+          style={{ width: '70%', padding: 8 }}
+        />
+        <button type="submit" style={{ marginLeft: 8, padding: '8px 12px' }}>
+          Adicionar
+        </button>
+      </form>
 }
