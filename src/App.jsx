@@ -8,4 +8,17 @@ function App(){
   const [editingId, setEditingId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [error, setError] = useState('');
+
+  const loadTodos = async () => {
+    try {
+      const response = await api.get('/');
+      setTodos(response.data);
+    } catch (err) {
+      setError('Não foi possível carregar as tarefas');
+    }
+  };
+
+  useEffect(() => {
+    loadTodos();
+  }, []);
 }
