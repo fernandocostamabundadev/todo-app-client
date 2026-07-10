@@ -53,4 +53,10 @@ function App(){
       setError('Erro ao alternar tarefa');
     }
   };
+
+  const startEdit = (todo) => {
+    setEditingId(todo.id);
+    setEditingTitle(todo.title);
+    setError('');
+  };
 }
