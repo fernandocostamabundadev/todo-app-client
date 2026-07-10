@@ -1,122 +1,178 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useState } from 'react';
+import api from './services/api.service';
+import { TodoItem } from './components/TodoItem';
+
+const emptyForm = {
+  task: "",
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [todos, setTodos] = useState([]);
+  const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+
+  const loadTodos = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(api);
+      const data = await response.json();
+      setTodos(data);
+    } catch (err) {
+      setError("Não foi possível carregar as tarefas.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTodos();
+  }, []);
+
+  const saveTodo = async (todo) => {
+    const method = editingId ? "PUT" : "POST";
+    const url = editingId ? `${api}/${editingId}` : api;
+    const response = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(todo),
+    });
+
+    if (!response.ok) {
+      throw new Error("Falha ao salvar tarefa.");
+    }
+
+    return response.json();
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    const task = form.task.trim();
+    if (!task) {
+      setError("Digite uma tarefa para continuar.");
+      return;
+    }
+
+    try {
+      const result = await saveTodo({
+        title: task,
+        description: "",
+      });
+
+      if (editingId) {
+        setTodos((prev) =>
+          prev.map((item) => (item.id === result.id ? result : item)),
+        );
+      } else {
+        setTodos((prev) => [...prev, result]);
+      }
+
+      setForm(emptyForm);
+      setEditingId(null);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const editTodo = (todo) => {
+    setForm({ task: todo.title });
+    setEditingId(todo.id);
+    setError("");
+  };
+
+  const cancelEdit = () => {
+    setForm(emptyForm);
+    setEditingId(null);
+    setError("");
+  };
+
+  const removeTodo = async (id) => {
+    try {
+      const response = await fetch(`${api}/${id}`, { method: "DELETE" });
+      if (!response.ok) {
+        throw new Error("Falha ao excluir tarefa.");
+      }
+      setTodos((prev) => prev.filter((todo) => todo.id !== id));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const toggleTodo = async (id) => {
+    try {
+      const response = await fetch(`${api}/${id}/toggle`, {
+        method: "PATCH",
+      });
+      if (!response.ok) {
+        throw new Error("Falha ao atualizar status.");
+      }
+      const updated = await response.json();
+      setTodos((prev) =>
+        prev.map((todo) => (todo.id === updated.id ? updated : todo)),
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const pendingCount = todos.filter((todo) => !todo.completed).length;
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-shell">
+      <div className="app-card">
+        <header className="page-header">
+          <div>
+            <h1>Minhas tarefas</h1>
+            <p className="eyebrow">Lista simples</p>
+          </div>
+          <span className="pill">{pendingCount} pendentes</span>
+        </header>
 
-      <div className="ticks"></div>
+        <form onSubmit={handleSubmit} className="task-form">
+          <input
+            value={form.task}
+            onChange={(event) => setForm({ task: event.target.value })}
+            placeholder={
+              editingId ? "Editar tarefa..." : "Digite uma tarefa..."
+            }
+          />
+          <button className="primary-button" type="submit">
+            {editingId ? "Salvar" : "Adicionar"}
+          </button>
+        </form>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {editingId && (
+          <button type="button" onClick={cancelEdit} className="secondary-link">
+            Cancelar edição
+          </button>
+        )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {error && <p className="error-message">{error}</p>}
+
+        <section className="task-list">
+          {loading ? (
+            <div className="empty-state">Carregando...</div>
+          ) : todos.length === 0 ? (
+            <div className="empty-state">Nenhuma tarefa foi criada</div>
+          ) : (
+            todos.map((todo) => (
+              <TodoItem
+                key={todo.id}
+                todo={todo}
+                onEdit={() => editTodo(todo)}
+                onDelete={() => removeTodo(todo.id)}
+                onToggle={() => toggleTodo(todo.id)}
+              />
+            ))
+          )}
+        </section>
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;
