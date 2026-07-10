@@ -88,4 +88,24 @@ function App(){
           Adicionar
         </button>
       </form>
+
+      <ul style={{ listStyle: 'none', padding: 0 }}>
+        {todos.map((todo) => (
+          <TodoItem
+            key={todo.id}
+            todo={todo}
+            onToggle={handleToggle}
+            onEdit={(id, title) => (editingId === id ? saveEdit() : startEdit({ id, title }))}
+            onDelete={handleDelete}
+            isEditing={editingId === todo.id}
+            editingTitle={editingTitle}
+            setEditingTitle={setEditingTitle}
+          />
+        ))}
+      </ul>
+    </div>
+  );
 }
+
+export default App;
+
