@@ -44,4 +44,13 @@ function App(){
       setError('Erro ao excluir tarefa');
     }
   };
+
+  const handleToggle = async (id) => {
+    try {
+      const response = await api.patch(`/${id}/toggle`);
+      setTodos(todos.map((todo) => (todo.id === id ? response.data : todo)));
+    } catch (err) {
+      setError('Erro ao alternar tarefa');
+    }
+  };
 }
