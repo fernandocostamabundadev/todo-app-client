@@ -21,4 +21,18 @@ function App(){
   useEffect(() => {
     loadTodos();
   }, []);
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+
+    try {
+      const response = await api.post('/', { title });
+      setTodos([...todos, response.data]);
+      setTitle('');
+      setError('');
+    } catch (err) {
+      setError('Erro ao adicionar tarefa');
+    }
+  };
 }
