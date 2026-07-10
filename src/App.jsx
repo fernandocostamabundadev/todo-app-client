@@ -35,4 +35,13 @@ function App(){
       setError('Erro ao adicionar tarefa');
     }
   };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/${id}`);
+      setTodos(todos.filter((todo) => todo.id !== id));
+    } catch (err) {
+      setError('Erro ao excluir tarefa');
+    }
+  };
 }
