@@ -59,4 +59,16 @@ function App(){
     setEditingTitle(todo.title);
     setError('');
   };
+
+  const saveEdit = async () => {
+    try {
+      const response = await api.put(`/${editingId}`, { title: editingTitle });
+      setTodos(todos.map((todo) => (todo.id === editingId ? response.data : todo)));
+      setEditingId(null);
+      setEditingTitle('');
+      setError('');
+    } catch (err) {
+      setError('Erro ao editar tarefa');
+    }
+  };
 }
